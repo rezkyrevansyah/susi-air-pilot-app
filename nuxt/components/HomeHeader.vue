@@ -26,11 +26,9 @@ import { Clock3 } from 'lucide-vue-next';
 
 const { profile } = storeToRefs(useSessionStore());
 
-// A greeting follows the pilot's own clock, so it is the one place the real
-// time is used. Business logic still runs on the fixed reference date.
-const hour = new Date().getHours();
-const greeting =
-  hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+// The app runs on a fixed reference date, so the greeting does not follow
+// the device clock either: every reviewer sees the same screen.
+const greeting = 'Welcome back';
 </script>
 
 <style scoped lang="scss">
