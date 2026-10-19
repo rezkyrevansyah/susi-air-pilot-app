@@ -61,6 +61,20 @@ svg {
   white-space: nowrap;
 }
 
+// Loading placeholder, sized by whoever uses it.
+.skeleton {
+  display: inline-block;
+  border-radius: 6px;
+  background: #dde3eb;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
