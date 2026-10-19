@@ -111,7 +111,18 @@ npm run check          # typecheck, tests, build, smoke test of the compiled ser
 npm run format:check
 ```
 
-Tests cover seed validation, window edges, document thresholds, all six endpoints, bad input, token failures, CORS and the error shape. `postman/susi-air-pilot-api.postman_collection.json` can be imported into Postman (set `baseUrl`, run Login first) or run with `postman collection run postman/susi-air-pilot-api.postman_collection.json`.
+Tests cover seed validation, window edges, document thresholds, all six endpoints, bad input, token failures, CORS and the error shape.
+
+### Postman
+
+Import `postman/susi-air-pilot-api.postman_collection.json`. It points at the live API, so any request works straight away; the collection logs in by itself when it has no token. To test a local server, set `baseUrl` to `http://localhost:3001`.
+
+From the command line:
+
+```sh
+postman collection run postman/susi-air-pilot-api.postman_collection.json
+postman collection run postman/susi-air-pilot-api.postman_collection.json --env-var baseUrl=http://localhost:3001
+```
 
 ## Deploy on Railway or Render
 

@@ -1,13 +1,21 @@
 {
   "info": {
     "name": "Susi Air Pilot API",
-    "description": "Run Login first. Business reference date: 15 May 2026. No saved token is committed.",
+    "description": "REST API for the Susi Air Pilot App technical test.\n\n**Quick start:** open any request and press Send. If there is no token yet, the collection logs in as `johndoe` automatically. You can also run the whole collection with the Runner.\n\n- `baseUrl` points to the live Railway deployment. Change it to `http://localhost:3001` to test a local server.\n- Business logic treats **15 May 2026** as today.\n- Every route except `POST /auth/login` needs `Authorization: Bearer <token>`. This is handled for you at collection level.\n- Errors always look like `{ statusCode, code, message, details? }`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3001"
+      "value": "https://susi-pilot-app-production.up.railway.app"
+    },
+    {
+      "key": "username",
+      "value": "johndoe"
+    },
+    {
+      "key": "password",
+      "value": "susiairtest"
     },
     {
       "key": "accessToken",
@@ -24,271 +32,579 @@
       }
     ]
   },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Log in automatically when a protected request runs without a token.",
+          "const isPublic = pm.request.auth && pm.request.auth.type === 'noauth';",
+          "if (!isPublic && !pm.collectionVariables.get('accessToken')) {",
+          "  pm.sendRequest({",
+          "    url: pm.variables.get('baseUrl') + '/auth/login',",
+          "    method: 'POST',",
+          "    header: { 'Content-Type': 'application/json' },",
+          "    body: {",
+          "      mode: 'raw',",
+          "      raw: JSON.stringify({",
+          "        username: pm.variables.get('username'),",
+          "        password: pm.variables.get('password'),",
+          "      }),",
+          "    },",
+          "  }, (error, response) => {",
+          "    if (!error && response.code === 200) {",
+          "      pm.collectionVariables.set('accessToken', response.json().accessToken);",
+          "    }",
+          "  });",
+          "}"
+        ]
+      }
+    }
+  ],
   "item": [
     {
-      "name": "Login",
-      "request": {
-        "method": "POST",
-        "auth": {
-          "type": "noauth"
-        },
-        "url": "{{baseUrl}}/auth/login",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"susiairtest\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "description": "Returns a Bearer token valid for 8 hours. The token is saved to `accessToken` for the other requests.",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
-        }
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.collectionVariables.set('accessToken', pm.response.json().accessToken);",
-              "pm.test('Eight-hour token', () => pm.expect(pm.response.json().expiresIn).to.eql(28800));"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Pilot profile",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/pilot/me"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('Seeded pilot', () => pm.expect(pm.response.json().name).to.eql('John Doe'));"
-            ]
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Returns an 8-hour Bearer token', () => { pm.expect(body.tokenType).to.eql('Bearer'); pm.expect(body.expiresIn).to.eql(28800); pm.expect(body.accessToken).to.be.a('string'); });",
+                  "if (pm.response.code === 200) pm.collectionVariables.set('accessToken', body.accessToken);"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Daily hours",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/flight-hours?from=2026-05-15&to=2026-05-15"
-      },
-      "event": [
+      "name": "Pilot",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('Reference daily hours', () => pm.expect(pm.response.json().days[0].hours).to.eql(6.4));"
-            ]
-          }
+          "name": "Pilot profile",
+          "request": {
+            "method": "GET",
+            "description": "Name, total flight hours and avatar URL (inline SVG).",
+            "url": {
+              "raw": "{{baseUrl}}/pilot/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["pilot", "me"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Profile fields', () => { pm.expect(body.name).to.eql('John Doe'); pm.expect(body.totalFlightHours).to.eql(1444.5); pm.expect(body.avatarUrl).to.match(/^data:image\\/svg\\+xml/); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Summary 1w",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/flight-hours/summary?range=1w"
-      },
-      "event": [
+      "name": "Flight hours",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Summary 1m",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/flight-hours/summary?range=1m"
-      },
-      "event": [
+          "name": "Daily hours",
+          "request": {
+            "method": "GET",
+            "description": "Daily flight hours between two dates, both inclusive. Dates use `YYYY-MM-DD`.",
+            "url": {
+              "raw": "{{baseUrl}}/flight-hours?from=2026-05-09&to=2026-05-15",
+              "host": ["{{baseUrl}}"],
+              "path": ["flight-hours"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-05-09",
+                  "description": "Start date, YYYY-MM-DD"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-05-15",
+                  "description": "End date, YYYY-MM-DD, not before `from`"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Seven days, sorted, ending on 15 May', () => { pm.expect(body.days).to.have.length(7); pm.expect(body.days[6]).to.eql({ date: '2026-05-15', hours: 6.4 }); });"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Summary 3m",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/flight-hours/summary?range=3m"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Summary 6m",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/flight-hours/summary?range=6m"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Summary 1y",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/flight-hours/summary?range=1y"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
-            ]
-          }
+          "name": "Rolling summary",
+          "description": "Limit cards for 15 May plus the rolling-sum chart (7 days before to 7 days after today). The rolling sum is calculated on the server.",
+          "item": [
+            {
+              "name": "Summary 1w",
+              "request": {
+                "method": "GET",
+                "description": "Chart uses a 7-day rolling window, limit line 40 h, Y max 45 h.",
+                "url": {
+                  "raw": "{{baseUrl}}/flight-hours/summary?range=1w",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["flight-hours", "summary"],
+                  "query": [
+                    {
+                      "key": "range",
+                      "value": "1w",
+                      "description": "One of 1w, 1m, 3m, 6m, 1y. Defaults to 1w."
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const body = pm.response.json();",
+                      "pm.test('Chart bounds for 1w', () => pm.expect(body.chart).to.include({ windowDays: 7, limit: 40, yMax: 45 }));",
+                      "pm.test('15 points centered on 15 May', () => { pm.expect(body.chart.points).to.have.length(15); pm.expect(body.chart.points[7].date).to.eql('2026-05-15'); });",
+                      "pm.test('Four limit cards for today', () => pm.expect(body.cards.map((c) => c.period)).to.eql(['daily', 'weekly', 'monthly', 'annual']));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Summary 1m",
+              "request": {
+                "method": "GET",
+                "description": "Chart uses a 30-day rolling window, limit line 100 h, Y max 125 h.",
+                "url": {
+                  "raw": "{{baseUrl}}/flight-hours/summary?range=1m",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["flight-hours", "summary"],
+                  "query": [
+                    {
+                      "key": "range",
+                      "value": "1m",
+                      "description": "One of 1w, 1m, 3m, 6m, 1y. Defaults to 1w."
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const body = pm.response.json();",
+                      "pm.test('Chart bounds for 1m', () => pm.expect(body.chart).to.include({ windowDays: 30, limit: 100, yMax: 125 }));",
+                      "pm.test('15 points centered on 15 May', () => { pm.expect(body.chart.points).to.have.length(15); pm.expect(body.chart.points[7].date).to.eql('2026-05-15'); });",
+                      "pm.test('Four limit cards for today', () => pm.expect(body.cards.map((c) => c.period)).to.eql(['daily', 'weekly', 'monthly', 'annual']));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Summary 3m",
+              "request": {
+                "method": "GET",
+                "description": "Chart uses a 90-day rolling window, limit line 300 h, Y max 325 h.",
+                "url": {
+                  "raw": "{{baseUrl}}/flight-hours/summary?range=3m",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["flight-hours", "summary"],
+                  "query": [
+                    {
+                      "key": "range",
+                      "value": "3m",
+                      "description": "One of 1w, 1m, 3m, 6m, 1y. Defaults to 1w."
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const body = pm.response.json();",
+                      "pm.test('Chart bounds for 3m', () => pm.expect(body.chart).to.include({ windowDays: 90, limit: 300, yMax: 325 }));",
+                      "pm.test('15 points centered on 15 May', () => { pm.expect(body.chart.points).to.have.length(15); pm.expect(body.chart.points[7].date).to.eql('2026-05-15'); });",
+                      "pm.test('Four limit cards for today', () => pm.expect(body.cards.map((c) => c.period)).to.eql(['daily', 'weekly', 'monthly', 'annual']));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Summary 6m",
+              "request": {
+                "method": "GET",
+                "description": "Chart uses a 180-day rolling window, limit line 600 h, Y max 625 h.",
+                "url": {
+                  "raw": "{{baseUrl}}/flight-hours/summary?range=6m",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["flight-hours", "summary"],
+                  "query": [
+                    {
+                      "key": "range",
+                      "value": "6m",
+                      "description": "One of 1w, 1m, 3m, 6m, 1y. Defaults to 1w."
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const body = pm.response.json();",
+                      "pm.test('Chart bounds for 6m', () => pm.expect(body.chart).to.include({ windowDays: 180, limit: 600, yMax: 625 }));",
+                      "pm.test('15 points centered on 15 May', () => { pm.expect(body.chart.points).to.have.length(15); pm.expect(body.chart.points[7].date).to.eql('2026-05-15'); });",
+                      "pm.test('Four limit cards for today', () => pm.expect(body.cards.map((c) => c.period)).to.eql(['daily', 'weekly', 'monthly', 'annual']));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Summary 1y",
+              "request": {
+                "method": "GET",
+                "description": "Chart uses a 365-day rolling window, limit line 1050 h, Y max 1200 h.",
+                "url": {
+                  "raw": "{{baseUrl}}/flight-hours/summary?range=1y",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["flight-hours", "summary"],
+                  "query": [
+                    {
+                      "key": "range",
+                      "value": "1y",
+                      "description": "One of 1w, 1m, 3m, 6m, 1y. Defaults to 1w."
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const body = pm.response.json();",
+                      "pm.test('Chart bounds for 1y', () => pm.expect(body.chart).to.include({ windowDays: 365, limit: 1050, yMax: 1200 }));",
+                      "pm.test('15 points centered on 15 May', () => { pm.expect(body.chart.points).to.have.length(15); pm.expect(body.chart.points[7].date).to.eql('2026-05-15'); });",
+                      "pm.test('Four limit cards for today', () => pm.expect(body.cards.map((c) => c.period)).to.eql(['daily', 'weekly', 'monthly', 'annual']));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
       "name": "Documents",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/documents"
-      },
-      "event": [
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('License expires soon on reference date', () => pm.expect(pm.response.json().documents.find(x => x.id === 'doc_license').status).to.eql('soon'));"
-            ]
-          }
+          "name": "Documents",
+          "request": {
+            "method": "GET",
+            "description": "Pilot documents with days remaining and a badge status: `safe`, `soon` (30 days or less) or `expired`.",
+            "url": {
+              "raw": "{{baseUrl}}/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const docs = pm.response.json().documents;",
+                  "pm.test('Badge status per document', () => pm.expect(Object.fromEntries(docs.map((d) => [d.id, d.status]))).to.eql({ doc_recurrent: 'safe', doc_ppc: 'safe', doc_license: 'soon', doc_medical: 'soon', doc_security: 'expired' }));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "May schedule",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/schedules?year=2026&month=05"
-      },
-      "event": [
+      "name": "Schedules",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('21 duty entries', () => pm.expect(pm.response.json().schedules.length).to.eql(21));"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Empty July schedule",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/schedules?year=2026&month=07"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
-              "pm.test('Empty month with legend', () => { pm.expect(pm.response.json().schedules).to.eql([]); pm.expect(pm.response.json().legend.length).to.eql(10); });"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Reject missing token",
-      "request": {
-        "method": "GET",
-        "auth": {
-          "type": "noauth"
+          "name": "Schedule for May 2026",
+          "request": {
+            "method": "GET",
+            "description": "Schedule entries for one month plus the duty-type legend. Data exists for April, May and June 2026.",
+            "url": {
+              "raw": "{{baseUrl}}/schedules?year=2026&month=05",
+              "host": ["{{baseUrl}}"],
+              "path": ["schedules"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "description": "Four-digit year"
+                },
+                {
+                  "key": "month",
+                  "value": "05",
+                  "description": "Two-digit month, 01 to 12"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('21 entries and 10 legend items', () => { pm.expect(body.schedules).to.have.length(21); pm.expect(body.legend).to.have.length(10); });"
+                ]
+              }
+            }
+          ]
         },
-        "url": "{{baseUrl}}/pilot/me"
-      },
-      "event": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Unauthorized', () => { pm.response.to.have.status(401); pm.expect(pm.response.json().code).to.eql('UNAUTHORIZED'); });"
-            ]
-          }
+          "name": "Month without schedules",
+          "request": {
+            "method": "GET",
+            "description": "A month outside the data still returns the full legend.",
+            "url": {
+              "raw": "{{baseUrl}}/schedules?year=2026&month=07",
+              "host": ["{{baseUrl}}"],
+              "path": ["schedules"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "description": "Four-digit year"
+                },
+                {
+                  "key": "month",
+                  "value": "07",
+                  "description": "Two-digit month, 01 to 12"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Empty list with legend', () => { pm.expect(body.schedules).to.eql([]); pm.expect(body.legend).to.have.length(10); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "Reject invalid range",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/flight-hours/summary?range=2w"
-      },
-      "event": [
+      "name": "Error cases",
+      "description": "Examples of the shared error response shape.",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Validation error', () => { pm.response.to.have.status(400); pm.expect(pm.response.json().code).to.eql('VALIDATION_ERROR'); });"
-            ]
-          }
+          "name": "Login with wrong password",
+          "request": {
+            "method": "POST",
+            "description": "Bad credentials return 401 `INVALID_CREDENTIALS`.",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"wrong-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 INVALID_CREDENTIALS with the standard error shape', () => { pm.response.to.have.status(401); const body = pm.response.json(); pm.expect(body).to.include({ statusCode: 401, code: 'INVALID_CREDENTIALS' }); pm.expect(body.message).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Missing token",
+          "request": {
+            "method": "GET",
+            "description": "A protected route without a token returns 401 `UNAUTHORIZED`.",
+            "url": {
+              "raw": "{{baseUrl}}/pilot/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["pilot", "me"]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('401 UNAUTHORIZED with the standard error shape', () => { pm.response.to.have.status(401); const body = pm.response.json(); pm.expect(body).to.include({ statusCode: 401, code: 'UNAUTHORIZED' }); pm.expect(body.message).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid range",
+          "request": {
+            "method": "GET",
+            "description": "An unknown `range` returns 400 `VALIDATION_ERROR` with details.",
+            "url": {
+              "raw": "{{baseUrl}}/flight-hours/summary?range=2w",
+              "host": ["{{baseUrl}}"],
+              "path": ["flight-hours", "summary"],
+              "query": [
+                {
+                  "key": "range",
+                  "value": "2w",
+                  "description": "Not an allowed value"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 VALIDATION_ERROR with the standard error shape', () => { pm.response.to.have.status(400); const body = pm.response.json(); pm.expect(body).to.include({ statusCode: 400, code: 'VALIDATION_ERROR' }); pm.expect(body.message).to.be.a('string'); });",
+                  "pm.test('Lists what was wrong', () => pm.expect(pm.response.json().details).to.be.an('array').that.is.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid month",
+          "request": {
+            "method": "GET",
+            "description": "Month must be 01 to 12.",
+            "url": {
+              "raw": "{{baseUrl}}/schedules?year=2026&month=13",
+              "host": ["{{baseUrl}}"],
+              "path": ["schedules"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "description": "Four-digit year"
+                },
+                {
+                  "key": "month",
+                  "value": "13",
+                  "description": "Out of range"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 VALIDATION_ERROR with the standard error shape', () => { pm.response.to.have.status(400); const body = pm.response.json(); pm.expect(body).to.include({ statusCode: 400, code: 'VALIDATION_ERROR' }); pm.expect(body.message).to.be.a('string'); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     }
