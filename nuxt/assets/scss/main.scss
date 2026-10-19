@@ -83,3 +83,16 @@ svg {
     transition-duration: 0.01ms !important;
   }
 }
+
+// Logbook and More share this simple layout.
+.placeholder-page {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  padding: $space-5 $space-4 $space-8;
+
+  @include desktop {
+    max-width: 640px;
+    padding: $space-8;
+  }
+}

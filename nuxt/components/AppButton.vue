@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue';
+import type { RouteLocationRaw } from 'vue-router';
 import { LoaderCircle } from 'lucide-vue-next';
 import { NuxtLink } from '#components';
 
@@ -28,7 +29,7 @@ withDefaults(
   defineProps<{
     variant?: 'primary' | 'secondary' | 'text';
     type?: 'button' | 'submit';
-    to?: string;
+    to?: RouteLocationRaw;
     icon?: Component;
     loading?: boolean;
     disabled?: boolean;

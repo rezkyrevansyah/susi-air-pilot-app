@@ -12,6 +12,7 @@
   justify-content: space-between;
   height: 56px;
   padding: 0 $space-4;
+  background: $surface;
 
   @include desktop {
     display: none;
