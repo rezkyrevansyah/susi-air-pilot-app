@@ -85,6 +85,10 @@ const isActive = (path: string) =>
   @include desktop {
     flex-direction: column;
     flex: 1;
+
+    li {
+      flex: none;
+    }
   }
 }
 

@@ -59,6 +59,13 @@ const icons = {
   align-items: flex-end;
   justify-content: space-between;
   gap: $space-3;
+
+  // Four cards share one row on desktop, so the value drops under the title.
+  @include desktop {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-2;
+  }
 }
 
 .limit-card__label {

@@ -209,9 +209,13 @@ const tooltipStyle = computed(() => {
 <style scoped lang="scss">
 .chart {
   position: relative;
+  min-width: 0;
   border-radius: $radius-field;
 
+  // CSS width lets the card decide the size; the observer then redraws the
+  // plot at that width so text never scales.
   svg {
+    width: 100%;
     overflow: visible;
     cursor: pointer;
     touch-action: pan-y;
