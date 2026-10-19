@@ -4,7 +4,7 @@ Technical test: a small part of the Susi Air Pilot App, where pilots check their
 
 | App                       | Stack                 | Live                                             |
 | ------------------------- | --------------------- | ------------------------------------------------ |
-| [`nuxt/`](nuxt/README.md) | Nuxt 3, Pinia, SCSS   | _Vercel URL to be added_                         |
+| [`nuxt/`](nuxt/README.md) | Nuxt 3, Pinia, SCSS   | https://pilot-app-susi-air-test.vercel.app       |
 | [`nest/`](nest/README.md) | NestJS 12, TypeScript | https://susi-pilot-app-production.up.railway.app |
 
 Sign in with `johndoe` / `susiairtest`. Both apps treat **15 May 2026** as today, as the brief requires.
