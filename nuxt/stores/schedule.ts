@@ -1,14 +1,13 @@
 import type { ScheduleMonth } from '~/types/api';
 
 export const useScheduleStore = defineStore('schedule', () => {
-  // Months already fetched, keyed "YYYY-MM". The data is read-only for the
-  // session, so going back and forth between months never refetches.
+  // Last response per month, keyed "YYYY-MM". Every month change still calls
+  // the API; a month seen before is shown straight away while it refreshes.
   const months = ref(new Map<string, ScheduleMonth>());
   const loading = ref<string | null>(null);
   const failed = ref<string | null>(null);
 
   async function load(key: string) {
-    if (months.value.has(key)) return;
     const { year, month } = parseMonth(key)!;
     loading.value = key;
     failed.value = null;
@@ -18,7 +17,8 @@ export const useScheduleStore = defineStore('schedule', () => {
       });
       months.value.set(key, data);
     } catch {
-      failed.value = key;
+      // Keep showing the last copy if there is one; otherwise show the error.
+      if (!months.value.has(key)) failed.value = key;
     } finally {
       if (loading.value === key) loading.value = null;
     }
