@@ -45,6 +45,13 @@
       </section>
 
       <template v-if="home.status !== 'error'">
+        <FlightHoursCard
+          v-if="summary"
+          :chart="summary.chart"
+          :as-of="summary.asOf"
+        />
+        <span v-else class="skeleton home__chart-skeleton" />
+
         <section
           class="home__section home__documents"
           aria-labelledby="documents-title"
@@ -128,6 +135,11 @@ onMounted(() => {
 
 .home__card-skeleton {
   height: 115px;
+  border-radius: $radius-card;
+}
+
+.home__chart-skeleton {
+  height: 409px;
   border-radius: $radius-card;
 }
 
