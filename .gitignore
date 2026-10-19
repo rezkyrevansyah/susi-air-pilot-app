@@ -11,3 +11,8 @@ coverage/
 # Recruitment brief stays local
 Brief - Susi Air Full Stack Dev Candidate.pdf
 Susi_Air_Fullstack_Developer_Technical_Test.md
+
+# Nuxt
+.nuxt/
+.output/
+.data/

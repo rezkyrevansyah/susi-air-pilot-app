@@ -1,0 +1,83 @@
+// Design tokens, mirrored from the Pencil design file.
+// Injected into every component through nuxt.config (vite additionalData).
+
+$navy: #0e2138;
+$red: #e63757;
+$red-pressed: #c92a47;
+$bg: #f5f6f8;
+$surface: #ffffff;
+$muted: #6b7280;
+$chart: #22c5e8;
+$border: #e3e6eb;
+$border-strong: #c9ced6;
+$navy-tint: #eaeef3;
+
+$success: #1fbf8f;
+$success-bg: #e4f7f1;
+$success-ink: #0a7d5d;
+$warning: #f59e0b;
+$warning-bg: #fef3dc;
+$warning-ink: #8a5300;
+$danger: #e63757;
+$danger-bg: #fde8ec;
+$danger-ink: #b3173a;
+$disabled-bg: #e5e7eb;
+$disabled-ink: #9ca3af;
+
+$font:
+  'Plus Jakarta Sans',
+  system-ui,
+  -apple-system,
+  'Segoe UI',
+  sans-serif;
+
+$radius-card: 16px;
+$radius-field: 12px;
+$radius-pill: 100px;
+
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+$space-5: 20px;
+$space-6: 24px;
+$space-8: 32px;
+
+$shadow-card:
+  0 1px 3px rgba($navy, 0.04),
+  0 6px 18px rgba($navy, 0.07);
+$shadow-nav: 0 -4px 16px rgba($navy, 0.05);
+$shadow-pop: 0 4px 12px rgba($navy, 0.2);
+
+$desktop: 1024px;
+$narrow: 360px;
+
+@mixin desktop {
+  @media (min-width: $desktop) {
+    @content;
+  }
+}
+
+@mixin narrow {
+  @media (max-width: $narrow) {
+    @content;
+  }
+}
+
+@mixin card {
+  background: $surface;
+  border-radius: $radius-card;
+  box-shadow: $shadow-card;
+}
+
+@mixin focus-ring {
+  outline: 2px solid $chart;
+  outline-offset: 2px;
+}
+
+// Type scale from the design: size / line-height / weight.
+@mixin text($size, $line, $weight: 500) {
+  font-size: $size;
+  line-height: $line;
+  font-weight: $weight;
+}
