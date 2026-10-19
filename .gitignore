@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+*.log
+.DS_Store
+
+# Recruitment brief stays local
+Brief - Susi Air Full Stack Dev Candidate.pdf
+Susi_Air_Fullstack_Developer_Technical_Test.md

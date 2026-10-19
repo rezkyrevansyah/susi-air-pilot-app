@@ -1,0 +1,296 @@
+{
+  "info": {
+    "name": "Susi Air Pilot API",
+    "description": "Run Login first. Business reference date: 15 May 2026. No saved token is committed.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"johndoe\",\n  \"password\": \"susiairtest\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.collectionVariables.set('accessToken', pm.response.json().accessToken);",
+              "pm.test('Eight-hour token', () => pm.expect(pm.response.json().expiresIn).to.eql(28800));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pilot profile",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pilot/me"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Seeded pilot', () => pm.expect(pm.response.json().name).to.eql('John Doe'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Daily hours",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/flight-hours?from=2026-05-15&to=2026-05-15"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Reference daily hours', () => pm.expect(pm.response.json().days[0].hours).to.eql(6.4));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summary 1w",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/flight-hours/summary?range=1w"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summary 1m",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/flight-hours/summary?range=1m"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summary 3m",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/flight-hours/summary?range=3m"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summary 6m",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/flight-hours/summary?range=6m"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summary 1y",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/flight-hours/summary?range=1y"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('15 centered dates', () => { const data = pm.response.json(); pm.expect(data.chart.points.length).to.eql(15); pm.expect(data.chart.points[7].date).to.eql('2026-05-15'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/documents"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('License expires soon on reference date', () => pm.expect(pm.response.json().documents.find(x => x.id === 'doc_license').status).to.eql('soon'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "May schedule",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/schedules?year=2026&month=05"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('21 duty entries', () => pm.expect(pm.response.json().schedules.length).to.eql(21));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empty July schedule",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/schedules?year=2026&month=07"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('Empty month with legend', () => { pm.expect(pm.response.json().schedules).to.eql([]); pm.expect(pm.response.json().legend.length).to.eql(10); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject missing token",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "noauth"
+        },
+        "url": "{{baseUrl}}/pilot/me"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Unauthorized', () => { pm.response.to.have.status(401); pm.expect(pm.response.json().code).to.eql('UNAUTHORIZED'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject invalid range",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/flight-hours/summary?range=2w"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Validation error', () => { pm.response.to.have.status(400); pm.expect(pm.response.json().code).to.eql('VALIDATION_ERROR'); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
