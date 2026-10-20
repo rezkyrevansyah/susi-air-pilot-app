@@ -47,6 +47,7 @@ On screens 1024 px and wider the bottom navigation becomes a left rail, the limi
 - **Colours from the API.** Calendar cells use each entry's `base_color`, and the text on top switches between navy and white by contrast. Legend codes and labels come from the API too.
 - **Limit card states.** Over 100% is red, from 90% amber, otherwise green. This matches the design states; the API doesn't define a "near" threshold.
 - **Lucide icons and no UI library.** Design tokens from the design file live in `assets/scss/_tokens.scss` and are available in every component.
+- **Official logo.** The local logo asset comes from [susiair.com](https://susiair.com/images/susiair-logo.png).
 
 ## Checks
 

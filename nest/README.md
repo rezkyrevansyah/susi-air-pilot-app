@@ -137,7 +137,7 @@ Create a Node web service with `nest` as the root directory.
 
 `--include=dev` keeps the Nest CLI and TypeScript available for the build even if the platform sets `NODE_ENV=production`.
 
-After deploying, check login, each protected route, a bad token, all five chart ranges, and CORS from the real frontend. This has not been done yet; only local tests have run.
+After deploying, check login, each protected route, a bad token, all five chart ranges, and CORS from the real frontend.
 
 ## With more time
 

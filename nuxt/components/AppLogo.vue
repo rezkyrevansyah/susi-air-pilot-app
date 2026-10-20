@@ -3,7 +3,7 @@
     src="/susi-air-logo.png"
     alt="Susi Air"
     :width="width"
-    :height="Math.round(width / 3.95)"
+    :height="Math.round(width / 4)"
     class="logo"
   />
 </template>

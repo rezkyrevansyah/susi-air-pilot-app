@@ -254,6 +254,10 @@ const legendLabel = (code: string) =>
   list-style: none;
   @include text(12px, 16px, 500);
 
+  @media (max-width: 420px) {
+    grid-template-columns: 1fr;
+  }
+
   li {
     display: flex;
     align-items: center;
@@ -267,10 +271,8 @@ const legendLabel = (code: string) =>
 }
 
 .calendar__legend-label {
-  overflow: hidden;
   color: $muted;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .calendar__swatch {
