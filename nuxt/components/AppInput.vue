@@ -129,6 +129,17 @@ defineExpose({ focus: () => input.value?.focus() });
     color: $muted;
   }
 
+  &:-webkit-autofill {
+    box-shadow: inset 0 0 0 100px $surface;
+    -webkit-text-fill-color: $navy;
+    caret-color: $navy;
+  }
+
+  &:disabled:-webkit-autofill {
+    box-shadow: inset 0 0 0 100px #f0f2f5;
+    -webkit-text-fill-color: $disabled-ink;
+  }
+
   &:disabled {
     color: $disabled-ink;
   }
