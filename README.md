@@ -41,6 +41,7 @@ On Windows PowerShell, use `Copy-Item` instead of `cp`. Environment variables, e
 
 - **"Today" is 15 May 2026**, as the brief asks, in both apps. `mock-documents.json` says 31 May; I went with the brief.
 - **Rolling sums are calculated on the server.** The frontend only draws what `/flight-hours/summary` returns.
+- **No root route on the API.** Only `POST /auth/login` is public, so opening the base URL returns the standard 404 JSON error.
 - **Duty codes come from the data.** The JSON legend uses `DTY`, `RLV`, `TRD`, `TRX` and `ULV`, which differ slightly from the codes in the brief, so the calendar shows whatever the API returns.
 - **Placeholders:** the day detail page, Logbook and More are placeholders, as allowed by the brief.
 - **Logo and brand colours** are taken from susiair.com and used only for this test.
