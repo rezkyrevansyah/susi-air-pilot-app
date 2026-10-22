@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Susi Air Pilot API",
-    "description": "REST API for the Susi Air Pilot App technical test.\n\n**Quick start:** open any request and press Send. If there is no token yet, the collection logs in as `johndoe` automatically. You can also run the whole collection with the Runner.\n\n- `baseUrl` points to the live Railway deployment. Change it to `http://localhost:3001` to test a local server.\n- Business logic treats **15 May 2026** as today.\n- Every route except `POST /auth/login` needs `Authorization: Bearer <token>`. This is handled for you at collection level.\n- Errors always look like `{ statusCode, code, message, details? }`.",
+    "description": "REST API for the Susi Air Pilot App technical test.\n\n**Quick start:** open any request and press Send. If there is no valid token (none yet, or an expired one), the collection logs in as `johndoe` automatically. You can also run the whole collection with the Runner.\n\n- `baseUrl` points to the live Railway deployment. Change it to `http://localhost:3001` to test a local server.\n- Business logic treats **15 May 2026** as today.\n- Every route except `POST /auth/login` needs `Authorization: Bearer <token>`. This is handled for you at collection level.\n- Errors always look like `{ statusCode, code, message, details? }`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -19,6 +19,10 @@
     },
     {
       "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "accessTokenExpiresAt",
       "value": ""
     }
   ],
@@ -38,9 +42,12 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Log in automatically when a protected request runs without a token.",
+          "// Log in automatically when a protected request runs without a valid token.",
+          "// Tokens last 8 hours; renew a minute early so a request never races the expiry.",
           "const isPublic = pm.request.auth && pm.request.auth.type === 'noauth';",
-          "if (!isPublic && !pm.collectionVariables.get('accessToken')) {",
+          "const expiresAt = Number(pm.collectionVariables.get('accessTokenExpiresAt')) || 0;",
+          "const hasValidToken = pm.collectionVariables.get('accessToken') && Date.now() < expiresAt - 60000;",
+          "if (!isPublic && !hasValidToken) {",
           "  pm.sendRequest({",
           "    url: pm.variables.get('baseUrl') + '/auth/login',",
           "    method: 'POST',",
@@ -54,7 +61,9 @@
           "    },",
           "  }, (error, response) => {",
           "    if (!error && response.code === 200) {",
-          "      pm.collectionVariables.set('accessToken', response.json().accessToken);",
+          "      const body = response.json();",
+          "      pm.collectionVariables.set('accessToken', body.accessToken);",
+          "      pm.collectionVariables.set('accessTokenExpiresAt', Date.now() + body.expiresIn * 1000);",
           "    }",
           "  });",
           "}"
@@ -104,7 +113,10 @@
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
                   "pm.test('Returns an 8-hour Bearer token', () => { pm.expect(body.tokenType).to.eql('Bearer'); pm.expect(body.expiresIn).to.eql(28800); pm.expect(body.accessToken).to.be.a('string'); });",
-                  "if (pm.response.code === 200) pm.collectionVariables.set('accessToken', body.accessToken);"
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "  pm.collectionVariables.set('accessTokenExpiresAt', Date.now() + body.expiresIn * 1000);",
+                  "}"
                 ]
               }
             }
