@@ -3,7 +3,7 @@
 My submission for the Susi Air Full Stack Developer technical test. It's a small mobile-first app where a pilot can sign in, check flight hours against duty limits, see when documents expire, and browse the monthly schedule.
 
 - **Live app:** https://pilot-app-susi-air-test.vercel.app
-- **Live API:** https://susi-pilot-app-production.up.railway.app ([Postman collection](nest/postman/susi-air-pilot-api.postman_collection.json))
+- **Live API:** https://susi-pilot-app-production.up.railway.app ([Postman collection](nest/postman/susi-air-pilot-api.postman_collection.json)). It runs on a Railway trial that ends around 19 November 2026; after that, the app can still be run locally (see below).
 - **Demo login:** `johndoe` / `susiairtest`
 
 ## Stack
