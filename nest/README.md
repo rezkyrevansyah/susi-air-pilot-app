@@ -1,6 +1,6 @@
 # Pilot API
 
-Backend for the Susi Air Pilot App technical test. NestJS 12 + TypeScript on Node 22. The three JSON files are loaded and validated once at startup and kept in memory, so there is no database.
+Backend for my Susi Air technical test submission, built with NestJS 12 and TypeScript on Node 22. The three JSON files from the brief are loaded and validated once at startup and kept in memory, so there is no database.
 
 ## Run locally
 
@@ -92,17 +92,15 @@ The real response has all four cards (daily, weekly, monthly, annual) and 15 cha
 
 Codes: `VALIDATION_ERROR`, `INVALID_CREDENTIALS`, `UNAUTHORIZED`, `NOT_FOUND`, `INTERNAL_ERROR`. A 500 never leaks a stack trace.
 
-## Decisions and why
+## Notes
 
-- **Today is 15 May 2026.** One constant is shared by every service, so results don't depend on the server clock. The brief says 15 May, while `mock-documents.json` says 31 May; I followed the brief.
-- **Rolling window.** A window ending on day D covers D and the `windowDays - 1` days before it. Missing days and days before the dataset count as 0, so the window never shrinks. Future dates use the values already in the seed data; there is no forecast.
-- **Rolling sum on the server.** `FlightHoursService.calculateRollingHours()` computes each chart value. Values are never clamped, so the frontend can draw points above the red line.
-- **Total flight hours.** `1444.5` is read from the seed profile as supplied. It happens to equal the sum of all 521 daily entries up to 31 May, which includes days after "today".
-- **Duty codes** come straight from the JSON legend (`DTY`, `RLV`, `TRD`, `TRX`, `ULV`), which differs from the codes written in the brief. The 4 June `TRX` entry has a different `base_color` than the legend; both values are passed through unchanged, so the frontend should colour each day with `base_color`.
-- **Avatar** is a small inline SVG data URL (initials `JD`), so there is no external image to host.
-- **Auth.** One hardcoded pilot, a global guard, and `@Public()` on login only. The guard checks signature, issuer, audience, subject and expiry.
-- **No health endpoint.** The brief allows only login to be public, so I didn't add one.
-- **Tests use Vitest + SWC** because NestJS 12's ESM packages don't work well with the default Jest setup on Node 22.
+- **Today is 15 May 2026.** One constant shared by every service, so results don't depend on the server clock. `mock-documents.json` says 31 May; I followed the brief.
+- **Rolling window.** A window ending on day D covers D and the `windowDays - 1` days before it. Missing days, and days before the dataset starts, count as 0. Future dates use the values already in the seed data. This lives in `FlightHoursService.calculateRollingHours()`, and values are never clamped so the chart can show points above the limit.
+- **Total flight hours** (`1444.5`) is read from the seed profile as supplied.
+- **Duty codes** come straight from the JSON legend (`DTY`, `RLV`, `TRD`, `TRX`, `ULV`), which differs from the codes written in the brief. Each entry's `base_color` is passed through unchanged.
+- **Auth.** One hardcoded pilot and a global guard; only login is marked `@Public()`. The guard checks signature, issuer, audience, subject and expiry. Because only login may be public, there is no health endpoint.
+- **Avatar** is an inline SVG data URL with the initials `JD`, so there is no image to host.
+- **Vitest + SWC** for tests, since NestJS 12's ESM packages don't play well with the default Jest setup.
 
 ## Checks
 
@@ -115,12 +113,9 @@ Tests cover seed validation, window edges, document thresholds, all six endpoint
 
 ### Postman
 
-Import `postman/susi-air-pilot-api.postman_collection.json`. It points at the live API, so any request works straight away; the collection logs in by itself when it has no token. To test a local server, set `baseUrl` to `http://localhost:3001`.
-
-From the command line:
+Import `postman/susi-air-pilot-api.postman_collection.json`. It points at the live API and logs in by itself when it has no token. For a local server, set `baseUrl` to `http://localhost:3001`, or from the command line:
 
 ```sh
-postman collection run postman/susi-air-pilot-api.postman_collection.json
 postman collection run postman/susi-air-pilot-api.postman_collection.json --env-var baseUrl=http://localhost:3001
 ```
 
