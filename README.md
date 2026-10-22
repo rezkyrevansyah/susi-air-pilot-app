@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/susi-air-logo.svg" alt="Susi Air" width="240"></p>
+
 # Susi Air Pilot App
 
 My submission for the Susi Air Full Stack Developer technical test. It's a small mobile-first app where a pilot can sign in, check flight hours against duty limits, see when documents expire, and browse the monthly schedule.
@@ -42,6 +44,15 @@ On Windows PowerShell, use `Copy-Item` instead of `cp`. Environment variables, e
 - **Duty codes come from the data.** The JSON legend uses `DTY`, `RLV`, `TRD`, `TRX` and `ULV`, which differ slightly from the codes in the brief, so the calendar shows whatever the API returns.
 - **Placeholders:** the day detail page, Logbook and More are placeholders, as allowed by the brief.
 - **Logo and brand colours** are taken from susiair.com and used only for this test.
+
+## With more time
+
+- Real pilot accounts and persistent per-pilot data instead of one hardcoded user and JSON files.
+- A refresh-token flow, with the token in an httpOnly cookie rather than `localStorage`.
+- End-to-end tests for sign in → Home → Schedule, plus the real day detail and Logbook screens.
+- Rate limiting on login, request logging and a health check.
+
+More detail in the [backend](nest/README.md#with-more-time) and [frontend](nuxt/README.md#with-more-time) READMEs.
 
 ## Tests
 
